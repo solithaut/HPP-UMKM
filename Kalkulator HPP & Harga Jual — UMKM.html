@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kalkulator HPP &amp; Harga Jual</title>
+<style>
+:root{
+  --bg:#FAFAF7; --panel:#FFFFFF; --ink:#1F2A24; --sub:#5B655F;
+  --line:#DDDBD3; --accent:#2F6F5E; --accent-ink:#FFFFFF;
+  --warn:#B8752F; --warnbg:#FBF0E3; --err:#B5432F; --errbg:#FBEAE6;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#14201A; --panel:#1C2A22; --ink:#EDF2EE; --sub:#9AAAA1;
+    --line:#31423A; --accent:#5FB79A; --accent-ink:#0E1712;
+    --warnbg:#2E2417; --errbg:#2E1B18;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#14201A; --panel:#1C2A22; --ink:#EDF2EE; --sub:#9AAAA1;
+  --line:#31423A; --accent:#5FB79A; --accent-ink:#0E1712;
+  --warnbg:#2E2417; --errbg:#2E1B18;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);}
+*{box-sizing:border-box;}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  line-height:1.45;
+}
+.wrap{max-width:640px; margin:0 auto; padding:28px 18px 60px;}
+header{margin-bottom:22px;}
+h1{font-size:1.5rem; font-weight:700; margin:0 0 6px; letter-spacing:-0.01em;}
+.tagline{color:var(--sub); font-size:0.92rem; margin:0;}
+section.card{
+  background:var(--panel); border:1px solid var(--line); border-radius:10px;
+  padding:16px 16px 18px; margin-bottom:16px;
+}
+h2{font-size:0.78rem; font-weight:700; text-transform:none; letter-spacing:.01em;
+  color:var(--sub); margin:0 0 12px; border-bottom:1px solid var(--line); padding-bottom:8px;}
+.row{display:flex; gap:8px; margin-bottom:8px; align-items:center; flex-wrap:wrap;}
+.row input[type=text]{flex:1 1 100px; min-width:90px;}
+.row input[type=number]{width:82px;}
+label{display:block; font-size:0.82rem; color:var(--sub); margin-bottom:4px;}
+input{
+  font-family:inherit; font-size:0.95rem; padding:9px 10px; border:1px solid var(--line);
+  border-radius:7px; background:var(--bg); color:var(--ink); width:100%;
+}
+input:focus{outline:2px solid var(--accent); outline-offset:1px;}
+.subtotal{font-variant-numeric:tabular-nums; font-size:0.85rem; color:var(--sub); min-width:88px; text-align:right;}
+.field{margin-bottom:12px;}
+.field small{display:block; color:var(--sub); font-size:0.78rem; margin-top:3px;}
+button{
+  font-family:inherit; font-size:0.88rem; padding:8px 14px; border-radius:7px;
+  border:1px solid var(--line); background:var(--bg); color:var(--ink); cursor:pointer;
+}
+button.primary{background:var(--accent); color:var(--accent-ink); border-color:var(--accent); font-weight:600;}
+button.ghost{border:none; color:var(--accent); padding:6px 4px; font-weight:600;}
+.btnrow{display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;}
+.chip-row{display:flex; gap:6px; flex-wrap:wrap; margin-top:6px;}
+.chip{padding:6px 12px; border-radius:20px; border:1px solid var(--line); font-size:0.82rem; background:var(--bg); cursor:pointer;}
+.chip.active{background:var(--accent); border-color:var(--accent); color:var(--accent-ink); font-weight:600;}
+.result-big{font-size:2rem; font-weight:700; font-variant-numeric:tabular-nums; margin:2px 0 2px;}
+.result-label{font-size:0.8rem; color:var(--sub);}
+.breakdown{margin-top:14px; padding-top:12px; border-top:1px solid var(--line);}
+.brow{display:flex; justify-content:space-between; font-size:0.88rem; padding:3px 0; font-variant-numeric:tabular-nums;}
+.brow.total{border-top:1px solid var(--line); margin-top:6px; padding-top:8px; font-weight:700;}
+table{width:100%; border-collapse:collapse; margin-top:10px; font-size:0.86rem;}
+th,td{text-align:right; padding:6px 4px; font-variant-numeric:tabular-nums;}
+th:first-child,td:first-child{text-align:left;}
+tr:not(:last-child){border-bottom:1px solid var(--line);}
+tr.selected td{font-weight:700; color:var(--accent);}
+.notice{padding:10px 12px; border-radius:7px; font-size:0.85rem; margin-top:12px;}
+.notice.warn{background:var(--warnbg); color:var(--warn);}
+.notice.err{background:var(--errbg); color:var(--err);}
+footer{color:var(--sub); font-size:0.78rem; text-align:center; margin-top:24px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Kalkulator HPP &amp; Harga Jual</h1>
+  <p class="tagline">Hitung biaya produksi sebenarnya, lalu tentukan harga jual yang masuk akal — bukan tebak-tebakan.</p>
+</header>
+
+<section class="card">
+  <h2>1. Bahan baku</h2>
+  <div id="bahanList"></div>
+  <button class="ghost" onclick="addBahan()">+ Tambah bahan</button>
+</section>
+
+<section class="card">
+  <h2>2. Tenaga kerja &amp; biaya lain</h2>
+  <div class="field">
+    <label for="tk">Biaya tenaga kerja per batch (Rp)</label>
+    <input type="number" id="tk" min="0" value="0" oninput="calc()">
+    <small>Jam kerja × upah/jam, atau upah borongan untuk 1 kali produksi.</small>
+  </div>
+  <div class="field">
+    <label for="ov">Biaya overhead per batch (Rp)</label>
+    <input type="number" id="ov" min="0" value="0" oninput="calc()">
+    <small>Kemasan, gas/listrik, penyusutan alat, transport bahan, dll.</small>
+  </div>
+</section>
+
+<section class="card">
+  <h2>3. Hasil produksi</h2>
+  <div class="row">
+    <div class="field" style="flex:1;">
+      <label for="unitTotal">Total unit diproduksi</label>
+      <input type="number" id="unitTotal" min="0" value="0" oninput="calc()">
+    </div>
+    <div class="field" style="flex:1;">
+      <label for="unitGagal">Unit gagal/rusak (opsional)</label>
+      <input type="number" id="unitGagal" min="0" value="0" oninput="calc()">
+    </div>
+  </div>
+</section>
+
+<section class="card">
+  <h2>4. Target margin</h2>
+  <div class="field">
+    <label for="margin">Margin di atas HPP (%)</label>
+    <input type="number" id="margin" min="0" value="30" oninput="calc()">
+  </div>
+  <div class="chip-row" id="chipRow"></div>
+</section>
+
+<section class="card" id="resultCard">
+  <h2>Hasil</h2>
+  <div id="resultBody"></div>
+</section>
+
+<div class="btnrow">
+  <button class="primary" onclick="loadDemo()">Muat contoh data</button>
+  <button onclick="resetAll()">Reset</button>
+</div>
+
+<footer>MVP Solithaut · Angka ini alat bantu hitung, bukan nasihat keuangan.</footer>
+</div>
+
+<script>
+let bahanRows = [];
+let rowId = 0;
+
+function addBahan(nama='', jumlah='', harga=''){
+  const id = rowId++;
+  bahanRows.push(id);
+  const div = document.createElement('div');
+  div.className='row';
+  div.id='bahan-'+id;
+  div.innerHTML = `
+    <input type="text" placeholder="Nama bahan" value="${nama}" oninput="calc()" data-role="nama">
+    <input type="number" placeholder="Jumlah" min="0" value="${jumlah}" oninput="calc()" data-role="jumlah">
+    <input type="number" placeholder="Harga satuan" min="0" value="${harga}" oninput="calc()" data-role="harga">
+    <span class="subtotal" data-role="subtotal">Rp 0</span>
+    <button class="ghost" onclick="removeBahan(${id})">✕</button>
+  `;
+  document.getElementById('bahanList').appendChild(div);
+  calc();
+}
+function removeBahan(id){
+  document.getElementById('bahan-'+id).remove();
+  bahanRows = bahanRows.filter(r=>r!==id);
+  calc();
+}
+function rupiah(n){
+  if(!isFinite(n)) return '—';
+  return 'Rp ' + Math.round(n).toLocaleString('id-ID');
+}
+function num(el){ const v=parseFloat(el.value); return isNaN(v)||v<0?0:v; }
+
+let selectedMargin = null;
+
+function calc(){
+  let totalBahan = 0;
+  document.querySelectorAll('#bahanList .row').forEach(row=>{
+    const jumlah = num(row.querySelector('[data-role=jumlah]'));
+    const harga = num(row.querySelector('[data-role=harga]'));
+    const sub = jumlah*harga;
+    row.querySelector('[data-role=subtotal]').textContent = rupiah(sub);
+    totalBahan += sub;
+  });
+
+  const tk = num(document.getElementById('tk'));
+  const ov = num(document.getElementById('ov'));
+  const hppBatch = totalBahan + tk + ov;
+
+  const unitTotal = num(document.getElementById('unitTotal'));
+  let unitGagal = num(document.getElementById('unitGagal'));
+  if(unitGagal > unitTotal) unitGagal = unitTotal;
+  const unitLayak = unitTotal - unitGagal;
+
+  const marginInput = document.getElementById('margin');
+  let margin = parseFloat(marginInput.value);
+  if(isNaN(margin)||margin<0) margin = 0;
+
+  const body = document.getElementById('resultBody');
+  const chipRow = document.getElementById('chipRow');
+
+  const quickMargins = [20,30,40,50];
+  chipRow.innerHTML = quickMargins.map(m=>
+    `<span class="chip ${m===margin?'active':''}" onclick="setMargin(${m})">${m}%</span>`
+  ).join('');
+
+  if(unitLayak <= 0){
+    body.innerHTML = `<div class="notice err">Isi total unit diproduksi (lebih besar dari unit gagal) untuk menghitung HPP per unit.</div>
+      <div class="breakdown">
+        <div class="brow"><span>Total bahan baku</span><span>${rupiah(totalBahan)}</span></div>
+        <div class="brow"><span>Tenaga kerja</span><span>${rupiah(tk)}</span></div>
+        <div class="brow"><span>Overhead</span><span>${rupiah(ov)}</span></div>
+        <div class="brow total"><span>HPP per batch</span><span>${rupiah(hppBatch)}</span></div>
+      </div>`;
+    return;
+  }
+
+  const hppUnit = hppBatch/unitLayak;
+  const hargaJual = Math.ceil((hppUnit*(1+margin/100))/100)*100;
+  const labaUnit = hargaJual - hppUnit;
+
+  let warn = '';
+  if(unitGagal > 0 && unitGagal/unitTotal > 0.15){
+    warn = `<div class="notice warn">Unit gagal cukup tinggi (${Math.round(unitGagal/unitTotal*100)}%) — cek proses produksi, ini menaikkan HPP per unit secara signifikan.</div>`;
+  }
+
+  const rows = quickMargins.map(m=>{
+    const hj = Math.ceil((hppUnit*(1+m/100))/100)*100;
+    return `<tr class="${m===margin?'selected':''}"><td>${m}%</td><td>${rupiah(hj)}</td><td>${rupiah(hj-hppUnit)}</td></tr>`;
+  }).join('');
+
+  body.innerHTML = `
+    <div class="result-label">HPP per unit</div>
+    <div class="result-big">${rupiah(hppUnit)}</div>
+    <div class="result-label">Harga jual disarankan (margin ${margin}%)</div>
+    <div class="result-big" style="color:var(--accent)">${rupiah(hargaJual)}</div>
+    <div class="result-label">Laba per unit: ${rupiah(labaUnit)}</div>
+    ${warn}
+    <div class="breakdown">
+      <div class="brow"><span>Total bahan baku</span><span>${rupiah(totalBahan)}</span></div>
+      <div class="brow"><span>Tenaga kerja</span><span>${rupiah(tk)}</span></div>
+      <div class="brow"><span>Overhead</span><span>${rupiah(ov)}</span></div>
+      <div class="brow total"><span>HPP per batch (${unitLayak} unit layak jual)</span><span>${rupiah(hppBatch)}</span></div>
+    </div>
+    <table>
+      <tr><th>Margin</th><th>Harga jual</th><th>Laba/unit</th></tr>
+      ${rows}
+    </table>
+  `;
+}
+
+function setMargin(m){
+  document.getElementById('margin').value = m;
+  calc();
+}
+
+function loadDemo(){
+  document.getElementById('bahanList').innerHTML=''; bahanRows=[]; rowId=0;
+  addBahan('Singkong segar (kg)', 20, 4000);
+  addBahan('Minyak goreng (liter)', 5, 16000);
+  addBahan('Bumbu & perasa (paket)', 1, 25000);
+  addBahan('Plastik kemasan (pcs)', 100, 300);
+  document.getElementById('tk').value = 100000;
+  document.getElementById('ov').value = 40000;
+  document.getElementById('unitTotal').value = 100;
+  document.getElementById('unitGagal').value = 5;
+  document.getElementById('margin').value = 30;
+  calc();
+}
+function resetAll(){
+  document.getElementById('bahanList').innerHTML=''; bahanRows=[]; rowId=0;
+  addBahan();
+  document.getElementById('tk').value = 0;
+  document.getElementById('ov').value = 0;
+  document.getElementById('unitTotal').value = 0;
+  document.getElementById('unitGagal').value = 0;
+  document.getElementById('margin').value = 30;
+  calc();
+}
+
+addBahan();
+calc();
+</script>
+</body>
+</html>
