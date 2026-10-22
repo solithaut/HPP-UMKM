@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Solithaut HPP Calculator Pro</title>
+<style>
+:root{
+  --bg:#FAFAF7; --panel:#FFFFFF; --ink:#1F2A24; --sub:#5B655F;
+  --line:#DDDBD3; --accent:#2F6F5E; --accent-ink:#FFFFFF;
+  --warn:#B8752F; --warnbg:#FBF0E3; --err:#B5432F; --errbg:#FBEAE6;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#14201A; --panel:#1C2A22; --ink:#EDF2EE; --sub:#9AAAA1;
+    --line:#31423A; --accent:#5FB79A; --accent-ink:#0E1712;
+    --warnbg:#2E2417; --errbg:#2E1B18;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#14201A; --panel:#1C2A22; --ink:#EDF2EE; --sub:#9AAAA1;
+  --line:#31423A; --accent:#5FB79A; --accent-ink:#0E1712;
+  --warnbg:#2E2417; --errbg:#2E1B18;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);}
+*{box-sizing:border-box;}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  line-height:1.45;
+}
+.wrap{max-width:640px; margin:0 auto; padding:28px 18px 60px;}
+header{margin-bottom:22px;}
+h1{font-size:1.5rem; font-weight:700; margin:0 0 6px; letter-spacing:-0.01em;}
+.tagline{color:var(--sub); font-size:0.92rem; margin:0;}
+section.card{
+  background:var(--panel); border:1px solid var(--line); border-radius:10px;
+  padding:16px 16px 18px; margin-bottom:16px;
+}
+h2{font-size:0.78rem; font-weight:700; text-transform:none; letter-spacing:.01em;
+  color:var(--sub); margin:0 0 12px; border-bottom:1px solid var(--line); padding-bottom:8px;}
+.row{display:flex; gap:8px; margin-bottom:8px; align-items:center; flex-wrap:wrap;}
+.row input[type=text]{flex:1 1 100px; min-width:90px;}
+.row input[type=number]{width:82px;}
+label{display:block; font-size:0.82rem; color:var(--sub); margin-bottom:4px;}
+input{
+  font-family:inherit; font-size:0.95rem; padding:9px 10px; border:1px solid var(--line);
+  border-radius:7px; background:var(--bg); color:var(--ink); width:100%;
+}
+input:focus{outline:2px solid var(--accent); outline-offset:1px;}
+.subtotal{font-variant-numeric:tabular-nums; font-size:0.85rem; color:var(--sub); min-width:88px; text-align:right;}
+.field{margin-bottom:12px;}
+.field small{display:block; color:var(--sub); font-size:0.78rem; margin-top:3px;}
+button{
+  font-family:inherit; font-size:0.88rem; padding:8px 14px; border-radius:7px;
+  border:1px solid var(--line); background:var(--bg); color:var(--ink); cursor:pointer;
+}
+button.primary{background:var(--accent); color:var(--accent-ink); border-color:var(--accent); font-weight:600;}
+button.ghost{border:none; color:var(--accent); padding:6px 4px; font-weight:600;}
+.btnrow{display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;}
+.chip-row{display:flex; gap:6px; flex-wrap:wrap; margin-top:6px;}
+.chip{padding:6px 12px; border-radius:20px; border:1px solid var(--line); font-size:0.82rem; background:var(--bg); cursor:pointer;}
+.chip.active{background:var(--accent); border-color:var(--accent); color:var(--accent-ink); font-weight:600;}
+.result-big{font-size:2rem; font-weight:700; font-variant-numeric:tabular-nums; margin:2px 0 2px;}
+.result-label{font-size:0.8rem; color:var(--sub);}
+.breakdown{margin-top:14px; padding-top:12px; border-top:1px solid var(--line);}
+.brow{display:flex; justify-content:space-between; font-size:0.88rem; padding:3px 0; font-variant-numeric:tabular-nums;}
+.brow.total{border-top:1px solid var(--line); margin-top:6px; padding-top:8px; font-weight:700;}
+table{width:100%; border-collapse:collapse; margin-top:10px; font-size:0.86rem;}
+th,td{text-align:right; padding:6px 4px; font-variant-numeric:tabular-nums;}
+th:first-child,td:first-child{text-align:left;}
+tr:not(:last-child){border-bottom:1px solid var(--line);}
+tr.selected td{font-weight:700; color:var(--accent);}
+.notice{padding:10px 12px; border-radius:7px; font-size:0.85rem; margin-top:12px;}
+.notice.warn{background:var(--warnbg); color:var(--warn);}
+.notice.err{background:var(--errbg); color:var(--err);}
+.notice.info{background:var(--bg);border:1px solid var(--line);color:var(--ink);}
+#gate{position:fixed;inset:0;z-index:9;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:18px;}
+#gate form{max-width:360px;width:100%;}
+#gate h1{margin-bottom:14px;}
+.pwbox{position:relative;}
+.pwbox input{padding-right:44px;}
+.eye{position:absolute;right:2px;top:50%;transform:translateY(-50%);border:none;background:none;padding:8px;color:var(--sub);cursor:pointer;line-height:0;}
+.eye:focus-visible{outline:2px solid var(--accent);border-radius:7px;}
+.slash{display:none;}
+.eye[aria-pressed=true] .slash{display:inline;}
+.gerr{color:var(--err);font-size:.85rem;min-height:1.2em;margin:6px 0;}
+footer{color:var(--sub); font-size:0.78rem; text-align:center; margin-top:24px;}
+</style>
+</head>
+<body>
+<div id="gate"><form onsubmit="return unlock(event)">
+  <h1>Solithaut HPP Calculator Pro</h1>
+  <div class="field"><label for="gpw">Kata sandi</label><div class="pwbox"><input id="gpw" type="password" autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false" oninput="gok()"><button type="button" class="eye" id="gtog" onclick="togglePw()" aria-label="Tampilkan kata sandi" aria-pressed="false"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/><path class="slash" d="M3 3l18 18"/></svg></button></div><small>Kata sandi ada di pesan pembelian dari Lynk.id.</small></div>
+  <div class="notice err" id="gerr" role="alert" style="display:none;margin:0 0 12px;"></div>
+  <button class="primary" type="submit">Buka kalkulator</button>
+  <p class="tagline" style="margin-top:14px">Untuk 1 pengguna. Jangan bagikan kata sandi atau jual ulang.</p>
+</form></div>
+<div class="wrap">
+<header>
+  <h1>Kalkulator HPP &amp; Harga Jual</h1>
+  <p class="tagline">Hitung modal asli tiap produkmu (disebut HPP), lalu tentukan harga jual yang aman. Bukan tebak-tebakan.</p>
+</header>
+
+<section class="card">
+  <h2>1. Bahan-bahan</h2>
+  <div id="bahanList"></div>
+  <button class="ghost" onclick="addBahan()">+ Tambah bahan</button>
+</section>
+
+<section class="card">
+  <h2>2. Upah &amp; biaya lain</h2>
+  <div class="field">
+    <label for="tk">Upah kerja sekali produksi (Rp)</label>
+    <input type="number" id="tk" min="0" value="0" oninput="calc()">
+    <small>Jam kerja × upah per jam, atau upah borongan untuk satu kali produksi.</small>
+  </div>
+  <div class="field">
+    <label for="ov">Biaya lain sekali produksi (Rp)</label>
+    <input type="number" id="ov" min="0" value="0" oninput="calc()">
+    <small>Kemasan, gas, listrik, ongkos antar bahan, biaya alat yang makin aus, dll.</small>
+  </div>
+</section>
+
+<section class="card">
+  <h2>3. Hasil produksi</h2>
+  <div class="row">
+    <div class="field" style="flex:1;">
+      <label for="unitTotal">Total produk yang dibuat</label>
+      <input type="number" id="unitTotal" min="0" value="0" oninput="calc()">
+    </div>
+    <div class="field" style="flex:1;">
+      <label for="unitGagal">Produk gagal atau rusak (boleh 0)</label>
+      <input type="number" id="unitGagal" min="0" value="0" oninput="calc()">
+    </div>
+  </div>
+</section>
+
+<section class="card">
+  <h2>4. Untung yang kamu mau</h2>
+  <div class="field">
+    <label for="margin">Untung di atas modal (%)</label>
+    <input type="number" id="margin" min="0" value="30" oninput="calc()">
+    <small>Contoh: 30% artinya harga jual = modal + 30%.</small>
+  </div>
+  <div class="chip-row" id="chipRow"></div>
+</section>
+
+<section class="card">
+  <h2>5. Harga bahan naik &amp; jual lewat marketplace</h2>
+  <div class="field"><label for="naik">Harga bahan naik berapa persen?</label><input type="number" id="naik" min="0" value="0" oninput="calc()"><small>Lihat dampaknya ke modal dan untungmu sebelum menaikkan harga jual.</small></div>
+  <div class="row">
+    <div class="field" style="flex:1;"><label for="fee">Potongan marketplace/aplikasi (%)</label><input type="number" id="fee" min="0" max="95" value="0" oninput="calc()"></div>
+    <div class="field" style="flex:1;"><label for="fix">Biaya tambahan per pesanan (Rp)</label><input type="number" id="fix" min="0" value="0" oninput="calc()"></div>
+  </div>
+  <small style="color:var(--sub)">Isi sesuai potongan terbaru di akun jualanmu (marketplace, aplikasi pesan-antar, dll.). Isi 0 kalau jual langsung.</small>
+</section>
+
+<section class="card" id="resultCard">
+  <h2>Hasil</h2>
+  <div id="resultBody"></div>
+</section>
+
+<section class="card">
+  <h2>6. Simpan hasil</h2>
+  <div class="field"><label for="pnama">Nama produk</label><input type="text" id="pnama" oninput="calc()" placeholder="Contoh: Keripik singkong 100 g"></div>
+  <div class="btnrow" style="margin:0 0 12px;"><button class="primary" onclick="simpan()">Simpan produk</button><button onclick="salin()">Salin hasil</button></div>
+  <div id="daftar"></div>
+</section>
+
+<div class="btnrow">
+  <button class="primary" onclick="loadDemo()">Lihat contoh</button>
+  <button onclick="resetAll()">Reset</button>
+</div>
+
+<footer>Solithaut HPP Calculator Pro · Untuk 1 pengguna, jangan dibagikan atau dijual ulang · Angka di sini hanya alat bantu hitung, bukan saran keuangan.</footer>
+</div>
+
+<script>
+let bahanRows = [];
+let rowId = 0;
+
+function addBahan(nama='', jumlah='', harga=''){
+  const id = rowId++;
+  bahanRows.push(id);
+  const div = document.createElement('div');
+  div.className='row';
+  div.id='bahan-'+id;
+  div.innerHTML = `
+    <input type="text" placeholder="Nama bahan" value="${esc(nama)}" oninput="calc()" data-role="nama">
+    <input type="number" placeholder="Jumlah" min="0" value="${jumlah}" oninput="calc()" data-role="jumlah">
+    <input type="number" placeholder="Harga per satuan" min="0" value="${harga}" oninput="calc()" data-role="harga">
+    <span class="subtotal" data-role="subtotal">Rp 0</span>
+    <button class="ghost" onclick="removeBahan(${id})">✕</button>
+  `;
+  document.getElementById('bahanList').appendChild(div);
+  calc();
+}
+function removeBahan(id){
+  document.getElementById('bahan-'+id).remove();
+  bahanRows = bahanRows.filter(r=>r!==id);
+  calc();
+}
+function rupiah(n){
+  if(!isFinite(n)) return '—';
+  return 'Rp ' + Math.round(n).toLocaleString('id-ID');
+}
+function num(el){ const v=parseFloat(el.value); return isNaN(v)||v<0?0:v; }
+
+let selectedMargin = null;
+
+function calc(){
+  let totalBahan = 0;
+  document.querySelectorAll('#bahanList .row').forEach(row=>{
+    const jumlah = num(row.querySelector('[data-role=jumlah]'));
+    const harga = num(row.querySelector('[data-role=harga]'));
+    const sub = jumlah*harga;
+    row.querySelector('[data-role=subtotal]').textContent = rupiah(sub);
+    totalBahan += sub;
+  });
+
+  const tk = num(document.getElementById('tk'));
+  const ov = num(document.getElementById('ov'));
+  const hppBatch = totalBahan + tk + ov;
+
+  const unitTotal = num(document.getElementById('unitTotal'));
+  let unitGagal = num(document.getElementById('unitGagal'));
+  if(unitGagal > unitTotal) unitGagal = unitTotal;
+  const unitLayak = unitTotal - unitGagal;
+
+  const marginInput = document.getElementById('margin');
+  let margin = parseFloat(marginInput.value);
+  if(isNaN(margin)||margin<0) margin = 0;
+
+  const body = document.getElementById('resultBody');
+  const chipRow = document.getElementById('chipRow');
+
+  const quickMargins = [20,30,40,50];
+  chipRow.innerHTML = quickMargins.map(m=>
+    `<span class="chip ${m===margin?'active':''}" onclick="setMargin(${m})">${m}%</span>`
+  ).join('');
+
+  if(unitLayak <= 0){
+    body.innerHTML = `<div class="notice err">Isi jumlah produk yang dibuat (harus lebih banyak dari yang gagal) supaya modal per produk bisa dihitung.</div>
+      <div class="breakdown">
+        <div class="brow"><span>Total bahan</span><span>${rupiah(totalBahan)}</span></div>
+        <div class="brow"><span>Upah kerja</span><span>${rupiah(tk)}</span></div>
+        <div class="brow"><span>Biaya lain</span><span>${rupiah(ov)}</span></div>
+        <div class="brow total"><span>Modal sekali produksi</span><span>${rupiah(hppBatch)}</span></div>
+      </div>`;
+    return;
+  }
+
+  const hppUnit = hppBatch/unitLayak;
+  const hargaJual = Math.ceil((hppUnit*(1+margin/100))/100)*100;
+  const labaUnit = hargaJual - hppUnit;
+  const naik = pct('naik'), fee = Math.min(pct('fee'),95), fix = pct('fix');
+  let extra = `<div class="result-label">Untung dari harga jual: ${(hargaJual>0?labaUnit/hargaJual*100:0).toFixed(1)}% (kamu menaikkan ${margin}% dari modal)</div>`;
+  if(naik>0){
+    const hppB = (totalBahan*(1+naik/100)+tk+ov)/unitLayak;
+    const hjB = Math.ceil((hppB*(1+margin/100))/100)*100;
+    const labaB = hargaJual - hppB;
+    extra += `<div class="notice info">Kalau harga bahan naik ${naik}%: modal per produk jadi ${rupiah(hppB)}. Kalau harga jual tetap ${rupiah(hargaJual)}, untungmu turun jadi ${rupiah(labaB)} per produk (${(labaB/hargaJual*100).toFixed(1)}%). Supaya untungnya tetap ${margin}% di atas modal, naikkan harga jual jadi ${rupiah(hjB)}.</div>`;
+  }
+  if(fee>0||fix>0){
+    const hjP = Math.ceil(((hppUnit*(1+margin/100)+fix)/(1-fee/100))/100)*100;
+    extra += `<div class="notice info">Kalau jual lewat marketplace/aplikasi (potongan ${fee}% + ${rupiah(fix)} per pesanan): pasang harga ${rupiah(hjP)} supaya untungmu tetap sama.</div>`;
+  }
+
+  let warn = '';
+  if(unitGagal > 0 && unitGagal/unitTotal > 0.15){
+    warn = `<div class="notice warn">Produk gagal cukup banyak (${Math.round(unitGagal/unitTotal*100)}%). Cek proses produksimu, karena ini membuat modal per produk naik cukup besar.</div>`;
+  }
+
+  const rows = quickMargins.map(m=>{
+    const hj = Math.ceil((hppUnit*(1+m/100))/100)*100;
+    return `<tr class="${m===margin?'selected':''}"><td>${m}%</td><td>${rupiah(hj)}</td><td>${rupiah(hj-hppUnit)}</td></tr>`;
+  }).join('');
+
+  body.innerHTML = `
+    <div class="result-label"><b>${esc($('pnama').value)}</b></div>
+    <div class="result-label">Modal per produk (HPP)</div>
+    <div class="result-big">${rupiah(hppUnit)}</div>
+    <div class="result-label">Harga jual yang disarankan (untung ${margin}% di atas modal)</div>
+    <div class="result-big" style="color:var(--accent)">${rupiah(hargaJual)}</div>
+    <div class="result-label">Untung per produk: ${rupiah(labaUnit)}</div>
+    ${warn}${extra}
+    <div class="breakdown">
+      <div class="brow"><span>Total bahan</span><span>${rupiah(totalBahan)}</span></div>
+      <div class="brow"><span>Upah kerja</span><span>${rupiah(tk)}</span></div>
+      <div class="brow"><span>Biaya lain</span><span>${rupiah(ov)}</span></div>
+      <div class="brow total"><span>Modal sekali produksi (${unitLayak} produk layak jual)</span><span>${rupiah(hppBatch)}</span></div>
+    </div>
+    <table>
+      <tr><th>Untung</th><th>Harga jual</th><th>Untung/produk</th></tr>
+      ${rows}
+    </table>
+  `;
+}
+
+function setMargin(m){
+  document.getElementById('margin').value = m;
+  calc();
+}
+
+function loadDemo(){
+  document.getElementById('bahanList').innerHTML=''; bahanRows=[]; rowId=0;
+  addBahan('Singkong segar (kg)', 20, 4000);
+  addBahan('Minyak goreng (liter)', 5, 16000);
+  addBahan('Bumbu & perasa (paket)', 1, 25000);
+  addBahan('Plastik kemasan (pcs)', 100, 300);
+  document.getElementById('tk').value = 100000;
+  document.getElementById('ov').value = 40000;
+  document.getElementById('unitTotal').value = 100;
+  document.getElementById('unitGagal').value = 5;
+  document.getElementById('margin').value = 30;
+  $('naik').value=10; $('fee').value=10; $('fix').value=1000; $('pnama').value='Keripik singkong (contoh)';
+  calc();
+}
+function resetAll(){
+  document.getElementById('bahanList').innerHTML=''; bahanRows=[]; rowId=0;
+  addBahan();
+  document.getElementById('tk').value = 0;
+  document.getElementById('ov').value = 0;
+  document.getElementById('unitTotal').value = 0;
+  document.getElementById('unitGagal').value = 0;
+  document.getElementById('margin').value = 30;
+  ['naik','fee','fix'].forEach(i=>$(i).value=0); $('pnama').value='';
+  calc();
+}
+
+const $=id=>document.getElementById(id);
+const PW_HASH='4948d7f863fbb6dfab5696a5a099e2dfbd75ec62a1d7d73a0d8ec80d48ebcc86';
+const FIELDS=['tk','ov','unitTotal','unitGagal','margin','naik','fee','fix'];
+const KEY='hpp_produk';
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function pct(id){const v=parseFloat($(id).value);return isNaN(v)||v<0?0:v;}
+async function sha(s){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');}
+function bukaGate(){$('gate').style.display='none';}
+function gok(){$('gerr').style.display='none';}
+function togglePw(){const i=$('gpw'),b=$('gtog'),s=i.type==='password';i.type=s?'text':'password';b.setAttribute('aria-pressed',s);b.setAttribute('aria-label',s?'Sembunyikan kata sandi':'Tampilkan kata sandi');}
+function bad(m,id){const e=$('gerr');e.textContent=m;e.style.display='block';if(id)$(id).focus();return false;}
+async function unlock(e){
+  e.preventDefault();
+  const p=$('gpw').value.trim();
+  if(!p)return bad('Kata sandi belum diisi.','gpw');
+  let h='';
+  try{h=await sha(p);}catch(x){return bad('Browser kamu tidak bisa memeriksa kata sandi. Coba buka lewat Chrome atau Safari terbaru.');}
+  if(h!==PW_HASH)return bad('Kata sandi salah. Coba lagi.','gpw');
+  try{localStorage.setItem('hpp_ok',PW_HASH);}catch(x){}
+  bukaGate();return false;
+}
+function init(){try{if(localStorage.getItem('hpp_ok')===PW_HASH)bukaGate();}catch(e){}}
+function getState(){return{bahan:[...document.querySelectorAll('#bahanList .row')].map(r=>['nama','jumlah','harga'].map(k=>r.querySelector('[data-role='+k+']').value)),f:FIELDS.map(i=>$(i).value)};}
+function setState(s,n){
+  $('bahanList').innerHTML='';bahanRows=[];rowId=0;
+  (s.bahan.length?s.bahan:[['','','']]).forEach(b=>addBahan(...b));
+  FIELDS.forEach((i,k)=>$(i).value=s.f[k]);
+  $('pnama').value=n;calc();
+}
+function store(){try{return JSON.parse(localStorage.getItem(KEY))||{};}catch(e){return{};}}
+function putStore(o){try{localStorage.setItem(KEY,JSON.stringify(o));}catch(e){alert('Browser kamu tidak bisa menyimpan. Pakai "Salin hasil" sebagai cadangan.');}}
+function simpan(){const n=$('pnama').value.trim();if(!n){alert('Isi nama produk dulu.');return;}const o=store();o[n]=getState();putStore(o);daftar();}
+function muat(n){const s=store()[n];if(s)setState(s,n);}
+function hapus(n){const o=store();delete o[n];putStore(o);daftar();}
+function daftar(){const k=Object.keys(store());$('daftar').innerHTML=k.length?k.map(n=>`<div class="row"><b style="flex:1">${esc(n)}</b><button data-n="${esc(n)}" onclick="muat(this.dataset.n)">Buka</button><button data-n="${esc(n)}" onclick="hapus(this.dataset.n)">Hapus</button></div>`).join(''):'<small>Belum ada produk yang disimpan. Data hanya tersimpan di browser ini.</small>';}
+function salin(){
+  const t=$('resultBody').innerText.replace(/\n{2,}/g,'\n');
+  navigator.clipboard.writeText(t+'\nSolithaut HPP Calculator Pro').then(()=>alert('Hasil sudah disalin.'),()=>alert('Gagal menyalin. Coba lagi atau foto layar hasilnya.'));
+}
+addBahan();
+calc();
+daftar();
+init();
+</script>
+</body>
+</html>
